@@ -1,0 +1,35 @@
+name: Build PokéSurvivor Windows EXE
+
+# Tento workflow umoznuje zostavit Windows .exe subor priamo v cloude na serveroch GitHubu
+# Nemusite mat na svojom pocitaci nainstalovane vobec nic!
+on:
+  workflow_dispatch: # Spustenie rucne kliknutim na tlacidlo v Actions tabe
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: 1. Stiahnutie zdrojoveho kodu
+        uses: actions/checkout@v4
+
+      - name: 2. Priprava Node.js prostredia
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 3. Instalacia Electronu a Builderu
+        run: |
+          npm install --save-dev electron electron-builder
+
+      - name: 4. Zostavenie Windows EXE
+        run: |
+          npx electron-builder --win portable
+
+      - name: 5. Spristupnenie hotoveho EXE na stiahnutie
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokéSurvivor-Windows-Binary
+          path: dist/*.exe
+          retention-days: 14

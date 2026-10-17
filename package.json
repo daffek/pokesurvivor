@@ -1,0 +1,42 @@
+{
+  "name": "pokesurvivor-windows",
+  "version": "1.0.0",
+  "description": "PokéSurvivor Windows Standalone Bullet-Heaven Game",
+  "main": "main.js",
+  "author": "PokéSurvivor Fan Project",
+  "scripts": {
+    "start": "electron .",
+    "build:exe": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.pokesurvivor.game",
+    "productName": "PokéSurvivor",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!.git/**",
+      "!videos/**",
+      "!.github/**"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PokéSurvivor"
+    }
+  }
+}
