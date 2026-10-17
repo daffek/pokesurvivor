@@ -1,0 +1,87 @@
+name: Build PokéSurvivor Windows EXE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: 1. Stiahnutie zdrojového kódu
+        uses: actions/checkout@v4
+
+      - name: 2. Príprava Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 3. Automatická konfigurácia
+        shell: bash
+        run: |
+          cat << 'EOF' > main.js
+          const { app, BrowserWindow, shell } = require('electron');
+          const path = require('path');
+          let mainWindow;
+          function createWindow() {
+            mainWindow = new BrowserWindow({
+              title: "PokéSurvivor",
+              width: 1280,
+              height: 768,
+              backgroundColor: '#0a0d14',
+              autoHideMenuBar: true,
+              show: false,
+              webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                webSecurity: false
+              }
+            });
+            mainWindow.setMenuBarVisibility(false);
+            mainWindow.loadFile(path.join(__dirname, 'index.html'));
+            mainWindow.once('ready-to-show', () => mainWindow.show());
+            mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+              shell.openExternal(url);
+              return { action: 'deny' };
+            });
+            mainWindow.webContents.on('before-input-event', (event, input) => {
+              if (input.key === 'F11' && input.type === 'keyDown') {
+                mainWindow.setFullScreen(!mainWindow.isFullScreen());
+                event.preventDefault();
+              }
+            });
+          }
+          app.whenReady().then(createWindow);
+          app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+          EOF
+
+          cat << 'EOF' > package.json
+          {
+            "name": "pokesurvivor-windows",
+            "version": "1.0.0",
+            "main": "main.js",
+            "devDependencies": {
+              "electron": "^33.2.1",
+              "electron-builder": "^25.1.8"
+            },
+            "build": {
+              "appId": "com.pokesurvivor.game",
+              "productName": "PokéSurvivor",
+              "directories": { "output": "dist" },
+              "files": ["**/*", "!dist/**", "!.git/**", "!videos/**"],
+              "win": { "target": ["portable"] }
+            }
+          }
+          EOF
+
+      - name: 4. Inštalácia Electronu a kompilácia EXE
+        run: |
+          npm install --save-dev electron@^33.2.1 electron-builder@^25.1.8
+          npx electron-builder --win portable
+
+      - name: 5. Uloženie hotového EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokeSurvivor-Windows-EXE
+          path: dist/*.exe
+          retention-days: 14
